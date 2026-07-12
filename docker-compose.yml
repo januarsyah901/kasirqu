@@ -1,25 +1,57 @@
-include:
-    - docker/docker-mysql.yml
-
 services:
-    ospos:
-        image: jekkos/opensourcepos:master
-        restart: always
-        depends_on:
-            - mysql
-        ports:
-            - "80:80"
-        networks:
-            - app_net
-        volumes:
-            - uploads:/app/public/uploads
-            - logs:/app/writable/logs
-        environment:
-            - CI_ENVIRONMENT=production
-            - ALLOWED_HOSTNAMES=localhost
-            - FORCE_HTTPS=false
-            - PHP_TIMEZONE=UTC
-            - MYSQL_USERNAME=admin
-            - MYSQL_PASSWORD=pointofsale
-            - MYSQL_DB_NAME=ospos
-            - MYSQL_HOST_NAME=mysql
+  php-fpm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kasirqu-php
+    working_dir: /app/backend
+    volumes:
+      - ./backend:/app/backend
+      - ./public/assets:/app/backend/public/assets:ro
+      - ./branding:/app/backend/public/branding:ro
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_DATABASE: kasirqu
+      DB_USERNAME: kasirqu
+      DB_PASSWORD: kasirqu
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: kasirqu-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./backend:/app/backend
+      - ./public/assets:/app/backend/public/assets:ro
+      - ./branding:/app/backend/public/branding:ro
+    depends_on:
+      - php-fpm
+
+  mysql:
+    image: mysql:8.0
+    container_name: kasirqu-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: kasirqu
+      MYSQL_USER: kasirqu
+      MYSQL_PASSWORD: kasirqu
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: kasirqu-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  mysql-data:

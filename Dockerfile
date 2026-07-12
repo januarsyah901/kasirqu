@@ -1,33 +1,30 @@
-FROM php:8.2-apache AS ospos
-LABEL maintainer="jekkos"
+FROM php:8.2-fpm
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libicu-dev \
-    libgd-dev \
-    && docker-php-ext-install mysqli bcmath intl gd \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
-    && a2enmod rewrite
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    git \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip opcache sockets
 
-RUN echo "date.timezone = \"\${PHP_TIMEZONE}\"" > /usr/local/etc/php/conf.d/timezone.ini
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-WORKDIR /app
-COPY --chown=www-data:www-data . /app
-RUN chmod 750 /app/writable/logs /app/writable/uploads /app/writable/cache /app/public/uploads /app/public/uploads/item_pics \
-    && chmod 640 /app/writable/uploads/importCustomers.csv \
-    && ln -s /app/*[^public] /var/www \
-    && rm -rf /var/www/html \
-    && ln -nsf /app/public /var/www/html
+WORKDIR /app/backend
 
-FROM ospos AS ospos_dev
+COPY backend/composer.json backend/composer.lock ./
+RUN composer install --no-dev --no-interaction --optimize-autoloader --no-scripts
 
-ARG USERID
-ARG GROUPID
+COPY backend/ ./
 
-RUN echo "Adding user uid $USERID with gid $GROUPID"
-RUN ( addgroup --gid $GROUPID ospos || true ) && ( adduser --uid $USERID --gid $GROUPID ospos )
+RUN useradd -m -s /bin/bash appuser \
+    && chown -R appuser:appuser /app/backend \
+    && chmod -R 755 /app/backend/storage /app/backend/bootstrap/cache
+USER appuser
 
-RUN yes | pecl install xdebug \
-    && echo "zend_extension=$(find /usr/local/lib/php/extensions/ -name xdebug.so)" > /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.mode=debug" >> /usr/local/etc/php/conf.d/xdebug.ini \
-    && echo "xdebug.remote_autostart=off" >> /usr/local/etc/php/conf.d/xdebug.ini
+EXPOSE 9000
