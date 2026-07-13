@@ -42,3 +42,27 @@
 - Added `SECURITY.md` (vuln policy + implemented measures), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`.
 - Added mermaid architecture diagram to `README.md`.
 - Committed and pushed to `origin/tech-migration-plan`. PR skipped per request.
+
+## Day 5 Summary — 2026-07-13 (Migration completion)
+- Completed the full CI4→Laravel/React migration. All OSPOS core modules now have
+  backend controllers + API resources + frontend pages:
+  - Receivings (+ ReceivingItems), Expenses, Cash Up, Inventory (adjust + transfer),
+    Giftcards, Item Kits (+ kit items), Suppliers/Categories/Locations (read-only),
+    Reports (sales/summary/customers/inventory/expenses), Suspended Sales (resume),
+    Product image upload, i18n (id/en) + Settings language switch.
+- Fixed runtime bugs found during verification:
+  - `Inventory`/`CashUp` models: added explicit `$table` (Laravel inferred wrong plural).
+  - `ItemQuantity` composite PK (`item_id`,`location_id`): overrode `setKeysForSaveQuery`
+    so `adjustQuantity()` UPDATE works (was throwing on save).
+  - `routes/api.php`: moved `GET giftcards/check` before `apiResource('giftcards')`
+    (route-order collision caused `show('check')` TypeError → 500).
+  - Aligned all frontend POST payloads to the backend validation contracts
+    (item_id/quantity_purchased/item_cost_price, trans_items/trans_location/trans_comment/
+    trans_user, from_location/to_location, giftcard_number/person_id, kit unit_price,
+    tax_category_id, employee_id on receivings/expenses/cash_up).
+- Tests: backend `php artisan test` → 36 passed (Auth/Product/Sale/Receiving/Expense/
+  CashUp/Inventory/Giftcard/ItemKit + Example units). Frontend `vitest run` → 28 passed
+  across 12 files; `vite build` clean.
+- Deployment ready: `docker-compose.yml` (Laravel FPM + Nginx + MySQL + Redis),
+  `captain-definition.json` for CapRover, hardened Nginx CSP, CI workflow. Run
+  `php artisan storage:link` once after deploy for product images.

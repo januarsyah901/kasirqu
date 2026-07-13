@@ -11,6 +11,8 @@ docker compose up -d --build
 # API:        http://localhost:8080/api/v1
 # Migrate + seed:
 docker compose exec php-fpm php artisan migrate --seed
+# Product images (run once after first deploy / release):
+docker compose exec php-fpm php artisan storage:link
 # Tests:
 docker compose exec php-fpm php artisan test
 # Frontend (Vite dev server):
