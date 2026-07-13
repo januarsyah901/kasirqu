@@ -125,4 +125,25 @@ class ProductController extends Controller
 
         return response()->noContent();
     }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/products/{id}/image",
+     *     summary="Upload a product image",
+     *     @OA\Response(response=200, description="Image uploaded")
+     * )
+     */
+    public function uploadImage(Request $request, int $id)
+    {
+        $item = Item::where('item_id', $id)->where('deleted', false)->firstOrFail();
+
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ]);
+
+        $path = $request->file('image')->store('products', 'public');
+        $item->update(['pic_filename' => basename($path)]);
+
+        return new ProductResource($item->fresh());
+    }
 }

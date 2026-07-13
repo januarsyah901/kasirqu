@@ -8,7 +8,10 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Customer;
 use App\Models\Item;
+use App\Models\ItemQuantity;
+use App\Models\Expense;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -149,6 +152,98 @@ class ReportController extends Controller
             'end_date' => $request->date_to,
             'rows' => $customers,
             'totals' => ['rows' => $customers->count()],
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/reports/inventory",
+     *     summary="Inventory report (low stock + stock value)",
+     *     @OA\Response(response=200, description="Inventory report")
+     * )
+     */
+    public function inventory(Request $request)
+    {
+        $lowStock = DB::table('item_quantities')
+            ->join('items', 'items.item_id', '=', 'item_quantities.item_id')
+            ->where('items.deleted', false)
+            ->whereColumn('item_quantities.quantity', '<=', 'items.reorder_level')
+            ->select(
+                'item_quantities.item_id',
+                'items.name as item_name',
+                'item_quantities.location_id',
+                'item_quantities.quantity',
+                'items.reorder_level'
+            )
+            ->orderBy('item_quantities.location_id')
+            ->orderBy('item_quantities.item_id')
+            ->get();
+
+        $stockValue = DB::table('item_quantities')
+            ->join('items', 'items.item_id', '=', 'item_quantities.item_id')
+            ->where('items.deleted', false)
+            ->select(
+                'item_quantities.location_id',
+                DB::raw('SUM(item_quantities.quantity * items.unit_price) as stock_value'),
+                DB::raw('SUM(item_quantities.quantity) as total_quantity')
+            )
+            ->groupBy('item_quantities.location_id')
+            ->get();
+
+        return new ReportResource((object) [
+            'report_type' => 'inventory',
+            'start_date' => null,
+            'end_date' => null,
+            'rows' => [
+                'low_stock' => $lowStock,
+                'stock_value' => $stockValue,
+            ],
+            'totals' => [
+                'low_stock_count' => $lowStock->count(),
+            ],
+        ]);
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/v1/reports/expenses",
+     *     summary="Expenses report (totals by category)",
+     *     @OA\Response(response=200, description="Expenses report")
+     * )
+     */
+    public function expenses(Request $request)
+    {
+        $request->validate([
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date',
+        ]);
+
+        $query = Expense::query()->where('deleted', false);
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('date', '<=', $request->date_to);
+        }
+
+        $rows = (clone $query)
+            ->select('category', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('category')
+            ->orderByDesc(DB::raw('SUM(amount)'))
+            ->get();
+
+        $total = (clone $query)->sum('amount');
+
+        return new ReportResource((object) [
+            'report_type' => 'expenses',
+            'start_date' => $request->date_from,
+            'end_date' => $request->date_to,
+            'rows' => $rows,
+            'totals' => [
+                'grand_total' => $total,
+                'categories' => $rows->count(),
+            ],
         ]);
     }
 }

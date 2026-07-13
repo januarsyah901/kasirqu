@@ -36,8 +36,41 @@ class SaleController extends Controller
         if ($dateTo) {
             $query->whereDate('sale_time', '<=', $dateTo);
         }
+        if ($request->query('suspended') === '1') {
+            $query->where('suspended', true);
+        }
 
         return SaleResource::collection($query->orderByDesc('sale_time')->paginate($perPage));
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/sales/{id}/suspend",
+     *     summary="Suspend a sale",
+     *     @OA\Response(response=200, description="Suspended")
+     * )
+     */
+    public function suspend(Request $request, int $id)
+    {
+        $sale = Sale::findOrFail($id);
+        $sale->update(['suspended' => true]);
+
+        return new SaleResource($sale->fresh());
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/v1/sales/{id}/resume",
+     *     summary="Resume a suspended sale",
+     *     @OA\Response(response=200, description="Resumed")
+     * )
+     */
+    public function resume(Request $request, int $id)
+    {
+        $sale = Sale::findOrFail($id);
+        $sale->update(['suspended' => false]);
+
+        return new SaleResource($sale->fresh());
     }
 
     /**
