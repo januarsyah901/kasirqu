@@ -21,10 +21,12 @@ class Sale extends Model
         'dinner_table_id',
         'work_order_number',
         'sale_type',
+        'suspended',
     ];
 
     protected $casts = [
         'sale_time' => 'datetime',
+        'suspended' => 'boolean',
     ];
 
     public function customer(): BelongsTo

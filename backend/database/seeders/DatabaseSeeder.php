@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
             ReceivingSeeder::class,
             ExpenseSeeder::class,
             CashUpSeeder::class,
+            GiftcardSeeder::class,
+            ItemKitSeeder::class,
         ]);
     }
 }
@@ -295,5 +297,64 @@ class CashUpSeeder extends Seeder
             'location_id' => $locations[0]->id,
             'deleted' => false,
         ]);
+    }
+}
+
+class GiftcardSeeder extends Seeder
+{
+    public function run(): void
+    {
+        for ($i = 1; $i <= 3; $i++) {
+            \App\Models\Giftcard::create([
+                'giftcard_number' => 1000 + $i,
+                'value' => rand(10, 100),
+                'record_time' => now()->subDays($i),
+                'deleted' => false,
+            ]);
+        }
+    }
+}
+
+class ItemKitSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $items = \App\Models\Item::all();
+        if ($items->isEmpty()) {
+            return;
+        }
+
+        for ($k = 1; $k <= 2; $k++) {
+            $kit = \App\Models\ItemKit::create([
+                'name' => 'Kit ' . $k,
+                'description' => 'Bundle ' . $k,
+                'total_cost' => 0,
+                'total_price' => 0,
+                'deleted' => false,
+            ]);
+
+            $costTotal = 0;
+            $priceTotal = 0;
+
+            for ($l = 0; $l < 2; $l++) {
+                $item = $items[(($k + $l) % $items->count())];
+                $qty = 2;
+                $costTotal += $qty * $item->cost_price;
+                $priceTotal += $qty * $item->unit_price;
+
+                \App\Models\ItemKitItem::create([
+                    'item_kit_id' => $kit->item_kit_id,
+                    'item_id' => $item->item_id,
+                    'quantity' => $qty,
+                    'cost_price' => $item->cost_price,
+                    'unit_price' => $item->unit_price,
+                ]);
+            }
+
+            $kit->update([
+                'total_cost' => $costTotal,
+                'total_price' => $priceTotal,
+            ]);
+        }
     }
 }

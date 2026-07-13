@@ -9,6 +9,8 @@ class Inventory extends Model
 {
     protected $primaryKey = 'trans_id';
 
+    protected $table = 'inventory';
+
     protected $fillable = [
         'trans_items',
         'trans_location',

@@ -26,4 +26,21 @@ class ItemQuantity extends Model
     {
         return $this->belongsTo(StockLocation::class, 'location_id', 'id');
     }
+
+    /**
+     * Composite primary key (item_id, location_id) — Eloquent's default
+     * save() cannot build the UPDATE WHERE clause for an array key, so we
+     * override to add one condition per key. Required for adjustQuantity().
+     */
+    protected function setKeysForSaveQuery($query)
+    {
+        $keys = $this->getKeyName();
+        if (! is_array($keys)) {
+            return parent::setKeysForSaveQuery($query);
+        }
+        foreach ($keys as $key) {
+            $query->where($key, '=', $this->getAttribute($key));
+        }
+        return $query;
+    }
 }

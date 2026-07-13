@@ -9,6 +9,8 @@ class CashUp extends Model
 {
     protected $primaryKey = 'cashup_id';
 
+    protected $table = 'cash_up';
+
     protected $fillable = [
         'open_amount',
         'close_amount',
