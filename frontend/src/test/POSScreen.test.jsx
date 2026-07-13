@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { LanguageProvider } from '../auth/LanguageContext';
 import POSScreen from '../components/POSScreen';
 
 vi.mock('../api/axios', () => ({
@@ -22,6 +23,7 @@ const mockProducts = {
 describe('POSScreen Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.setItem('lang', 'en');
     api.get.mockResolvedValue(mockProducts);
     api.post.mockResolvedValue({ data: { data: {}, message: 'ok' } });
   });
@@ -29,7 +31,9 @@ describe('POSScreen Component', () => {
   const renderPOS = () => {
     return render(
       <BrowserRouter>
-        <POSScreen />
+        <LanguageProvider>
+          <POSScreen />
+        </LanguageProvider>
       </BrowserRouter>
     );
   };
