@@ -4,10 +4,16 @@ import Dashboard from './components/Dashboard';
 import POSScreen from './components/POSScreen';
 import Settings from './components/Settings';
 import Reports from './components/Reports';
+import Login from './components/Login';
 import './index.css';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const token = typeof window !== 'undefined' ? localStorage.getItem('sanctum_token') : null;
+
+  if (!token) {
+    return <Login />;
+  }
 
   return (
     <Router>

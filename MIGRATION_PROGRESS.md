@@ -6,6 +6,14 @@
 | 2 | done | 2026-07-13 | Models, auth, API routes |
 | 3 | done | 2026-07-13 | Frontend scaffold + components |
 | 4 | done | 2026-07-13 | CI, security, docs (PR skipped per request) |
+| 5 | done | 2026-07-13 | DB schema complete (receivings/expenses/cash_up/inventory), frontend connected to API (auth/POS/Dashboard/Reports), tests expanded, deploy config added |
+
+## Day 5 Summary — 2026-07-13
+- Database: added 5 migrations (receivings, receiving_items, expenses, cash_up, inventory) + Eloquent models + seeders. Verified all 22 migrations run cleanly on sqlite.
+- Frontend: connected API (auth/login context, POS posts to `/sales`, Dashboard + Reports fetch from API), expanded tests (3 new test files: Login, POS, Dashboard).
+- Backend tests: 13 passing (Auth, Product, Sale + example). PHPUnit sqlite in-memory enabled.
+- Deployment: added `captain-definition.json` (CapRover compose deploy) + `DEPLOY.md`. `docker-compose.yml` validated.
+- CI/docs: README updated with deployment section; MIGRATION_PROGRESS updated.
 
 ## Day 1 Summary — 2026-07-12
 - Created branch `tech-migration-plan` from `main`; pushed to origin.

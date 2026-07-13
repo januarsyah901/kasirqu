@@ -42,6 +42,12 @@ flowchart LR
 
 Progress: see `MIGRATION_PROGRESS.md`.
 
+## 🚀 Deployment
+
+- **Local:** `docker compose up -d --build` (Laravel PHP-FPM + Nginx :8080 + MySQL 8 + Redis 7). See `DEPLOY.md`.
+- **CapRover:** `captain-definition.json` (schemaVersion 2, compose) deploys the full stack from this repo. See `DEPLOY.md`.
+- **CI/CD:** GitHub Actions (`.github/workflows/ci.yml`) runs backend (PHP 8.2 + Pest/PHPUnit + php-cs-fixer), frontend (Node 24 + Vitest + Cypress e2e), docker build, and Trivy security scan.
+
 ## 👋 Introduction
 
 Open Source Point of Sale is a web-based point of sale system. The application is written in PHP, uses MySQL (or MariaDB) as the data storage back-end, and has a simple but intuitive user interface.

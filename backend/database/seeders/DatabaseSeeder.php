@@ -2,9 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\CashUp;
 use App\Models\Customer;
 use App\Models\Employee;
+use App\Models\Expense;
 use App\Models\Item;
+use App\Models\Receiving;
+use App\Models\ReceivingItem;
 use App\Models\Person;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -26,6 +30,9 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             ProductSeeder::class,
             SaleSeeder::class,
+            ReceivingSeeder::class,
+            ExpenseSeeder::class,
+            CashUpSeeder::class,
         ]);
     }
 }
@@ -191,5 +198,102 @@ class SaleSeeder extends Seeder
                 'payment_amount' => $total,
             ]);
         }
+    }
+}
+
+class ReceivingSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $employee = Employee::first();
+        $suppliers = Supplier::all();
+        $locations = StockLocation::all();
+        $items = Item::all();
+
+        for ($r = 1; $r <= 3; $r++) {
+            $supplier = $suppliers[$r % $suppliers->count()];
+            $location = $locations[0];
+
+            $receiving = Receiving::create([
+                'supplier_id' => $supplier->person_id,
+                'employee_id' => $employee->person_id,
+                'receiving_time' => now()->subDays($r),
+                'comment' => "Receiving #{$r}",
+                'payment_type' => 'Cash',
+                'amount_tendered' => 0,
+                'amount_owed' => 0,
+                'reference' => 'PO' . str_pad((string) $r, 4, '0', STR_PAD_LEFT),
+                'location_id' => $location->id,
+                'deleted' => false,
+            ]);
+
+            $costTotal = 0;
+            for ($line = 0; $line < 3; $line++) {
+                $item = $items[($r + $line) % $items->count()];
+                $qty = rand(5, 20);
+                $cost = $item->cost_price;
+                $costTotal += $qty * $cost;
+                ReceivingItem::create([
+                    'receiving_id' => $receiving->receiving_id,
+                    'item_id' => $item->item_id,
+                    'line' => $line + 1,
+                    'description' => $item->name,
+                    'quantity_purchased' => $qty,
+                    'item_cost_price' => $cost,
+                    'item_unit_price' => $item->unit_price,
+                    'discount_percent' => 0,
+                    'location_id' => $location->id,
+                ]);
+            }
+
+            $receiving->update(['amount_tendered' => $costTotal, 'amount_owed' => 0]);
+        }
+    }
+}
+
+class ExpenseSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $employee = Employee::first();
+        $locations = StockLocation::all();
+
+        $samples = [
+            ['Utilities', 'Electricity bill', 120.50],
+            ['Rent', 'Monthly store rent', 800.00],
+            ['Supplies', 'Office supplies', 45.75],
+        ];
+
+        foreach ($samples as $idx => $s) {
+            Expense::create([
+                'date' => now()->subDays($idx + 1)->toDateString(),
+                'amount' => $s[2],
+                'category' => $s[0],
+                'description' => $s[1],
+                'employee_id' => $employee->person_id,
+                'location_id' => $locations[0]->id,
+                'deleted' => false,
+            ]);
+        }
+    }
+}
+
+class CashUpSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $employee = Employee::first();
+        $locations = StockLocation::all();
+
+        CashUp::create([
+            'open_amount' => 100.00,
+            'close_amount' => 540.25,
+            'cash_sales_amount' => 440.25,
+            'open_date' => now()->toDateString(),
+            'close_date' => now()->toDateString(),
+            'employee_id' => $employee->person_id,
+            'location_id' => $locations[0]->id,
+            'deleted' => false,
+        ]);
     }
 }

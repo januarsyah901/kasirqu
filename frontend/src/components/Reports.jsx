@@ -1,16 +1,47 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import api from '../api/axios';
 
 export default function Reports() {
   const [dateRange, setDateRange] = useState('today');
   const [reportType, setReportType] = useState('sales');
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [summary, setSummary] = useState({ totalSales: 0, transactions: 0, avg: 0 });
 
-  const mockSalesData = [
-    { id: 1, date: '2026-07-13 09:00', customer: 'Walk-in', total: 45000, items: 3 },
-    { id: 2, date: '2026-07-13 09:15', customer: 'John Doe', total: 120000, items: 5 },
-    { id: 3, date: '2026-07-13 09:30', customer: 'Walk-in', total: 35000, items: 2 },
-    { id: 4, date: '2026-07-13 10:00', customer: 'Jane Smith', total: 85000, items: 4 },
-  ];
+  const fetchReport = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const params = new URLSearchParams();
+      if (reportType === 'sales') {
+        if (dateRange === 'custom') {
+          params.append('date_from', '2000-01-01');
+          params.append('date_to', '2100-01-01');
+        }
+      }
+      const res = await api.get(`/reports/sales?${params.toString()}`);
+      const dataRows = res.data?.data?.rows || [];
+      setRows(dataRows);
+      const totals = res.data?.data?.totals || {};
+      const totalSales = Number(totals.total ?? totals.total_paid ?? dataRows.reduce((s, r) => s + Number(r.total || 0), 0));
+      const transactions = dataRows.length;
+      const avg = transactions ? totalSales / transactions : 0;
+      setSummary({ totalSales, transactions, avg });
+    } catch {
+      setError('Failed to load reports');
+      setRows([]);
+      setSummary({ totalSales: 0, transactions: 0, avg: 0 });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="p-6">
@@ -60,6 +91,7 @@ export default function Reports() {
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              onClick={fetchReport}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors"
             >
               Generate Report
@@ -78,9 +110,9 @@ export default function Reports() {
         >
           <p className="text-gray-500 dark:text-gray-400 text-sm">Total Sales</p>
           <p className="text-3xl font-bold text-gray-800 dark:text-white mt-2">
-            Rp 285,000
+            Rp {summary.totalSales.toLocaleString()}
           </p>
-          <p className="text-green-600 text-sm mt-1">↑ 12.5% from yesterday</p>
+          <p className="text-green-600 text-sm mt-1">From fetched report</p>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -90,7 +122,7 @@ export default function Reports() {
         >
           <p className="text-gray-500 dark:text-gray-400 text-sm">Transactions</p>
           <p className="text-3xl font-bold text-gray-800 dark:text-white mt-2">
-            4
+            {summary.transactions}
           </p>
           <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Completed</p>
         </motion.div>
@@ -102,7 +134,7 @@ export default function Reports() {
         >
           <p className="text-gray-500 dark:text-gray-400 text-sm">Avg. Transaction</p>
           <p className="text-3xl font-bold text-gray-800 dark:text-white mt-2">
-            Rp 71,250
+            Rp {Math.round(summary.avg).toLocaleString()}
           </p>
           <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Per sale</p>
         </motion.div>
@@ -124,44 +156,48 @@ export default function Reports() {
               Export CSV
             </button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Date & Time
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Customer
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Items
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {mockSalesData.map((sale) => (
-                  <tr key={sale.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-4 py-3 text-sm text-gray-800 dark:text-white">
-                      {sale.date}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-800 dark:text-white">
-                      {sale.customer}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-800 dark:text-white">
-                      {sale.items}
-                    </td>
-                    <td className="px-4 py-3 text-sm font-semibold text-green-600 dark:text-green-400">
-                      Rp {sale.total.toLocaleString()}
-                    </td>
+          {error && <p className="text-red-600 mb-4">{error}</p>}
+          {loading ? (
+            <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Sale ID</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Invoice</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Date & Time</th>
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Total</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {rows.map((sale) => (
+                    <tr key={sale.sale_id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-4 py-3 text-sm text-gray-800 dark:text-white">
+                        {sale.sale_id}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-800 dark:text-white">
+                        {sale.invoice_number}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-800 dark:text-white">
+                        {sale.sale_time}
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-green-600 dark:text-green-400">
+                        Rp {Number(sale.total || 0).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                  {!rows.length && (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-6 text-center text-gray-500 dark:text-gray-400">
+                        No sales found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
