@@ -5,7 +5,7 @@
 | 1 | done | 2026-07-12 | Docker + Laravel scaffold |
 | 2 | done | 2026-07-13 | Models, auth, API routes |
 | 3 | done | 2026-07-13 | Frontend scaffold + components |
-| 4 | in_progress | 2026-07-13 | CI, security, docs, PR |
+| 4 | done | 2026-07-13 | CI, security, docs (PR skipped per request) |
 
 ## Day 1 Summary — 2026-07-12
 - Created branch `tech-migration-plan` from `main`; pushed to origin.
@@ -27,3 +27,10 @@
 - Created Cypress e2e spec: `cypress/e2e/pos-sale.cy.js` (full sale flow, quantity adjustment, cart removal). Runner not executed (requires dev server).
 - Backend tests verified: `php artisan test` → 2 passed (ExampleTest fixtures from Laravel scaffold).
 - Committed 40 files (10,483 insertions) and pushed to `origin/tech-migration-plan`.
+
+## Day 4 Summary — 2026-07-13
+- Added `.github/workflows/ci.yml` (4 jobs: backend-tests PHP 8.2 + Pest + php-cs-fixer, frontend-tests Node 24 + Vitest + Cypress e2e, docker-build, security-scan Trivy SARIF upload).
+- Hardened `nginx/default.conf`: CSP, X-Content-Type-Options, X-Frame-Options DENY, X-XSS-Protection, HSTS (preload), Referrer-Policy, Permissions-Policy.
+- Added `SECURITY.md` (vuln policy + implemented measures), `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`.
+- Added mermaid architecture diagram to `README.md`.
+- Committed and pushed to `origin/tech-migration-plan`. PR skipped per request.

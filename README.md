@@ -14,6 +14,34 @@
 <a href="https://translate.opensourcepos.org/engage/opensourcepos/?utm_source=widget" target="_blank"><img src="https://translate.opensourcepos.org/widgets/opensourcepos/-/svg-badge.svg" alt="Translation Status"></a>
 </p>
 
+## 🚀 Tech Migration — Laravel + React + Docker
+
+KasirQu is being migrated from the legacy CodeIgniter 4 codebase to a modern stack per `MIGRATION_PLAN.md`:
+
+- **Backend:** Laravel 10 (PHP 8.2) in `backend/` — Eloquent models, Sanctum auth, REST API at `/api/v1/*`
+- **Frontend:** React 18 + Vite + TailwindCSS in `frontend/` — Dashboard, POS, Settings, Reports
+- **Infra:** Docker (`Dockerfile`, `docker-compose.yml`: php-fpm, nginx, mysql 8, redis)
+- **CI/CD:** GitHub Actions (`.github/workflows/ci.yml`)
+
+```mermaid
+flowchart LR
+  subgraph FE[React Frontend]
+    UI[UI Components] --> API[Axios Calls]
+  end
+  subgraph BE[Laravel API]
+    Controllers --> Services --> Models
+    Models --> DB[(MySQL)]
+  end
+  subgraph INF[Docker]
+    Nginx --> PHP[php-fpm] --> Redis[Cache]
+    PHP --> DB
+  end
+  UI -->|HTTPS| Nginx
+  API -->|HTTPS| Nginx
+```
+
+Progress: see `MIGRATION_PROGRESS.md`.
+
 ## 👋 Introduction
 
 Open Source Point of Sale is a web-based point of sale system. The application is written in PHP, uses MySQL (or MariaDB) as the data storage back-end, and has a simple but intuitive user interface.
