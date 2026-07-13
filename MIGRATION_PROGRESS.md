@@ -5,7 +5,7 @@
 | 1 | done | 2026-07-12 | Docker + Laravel scaffold |
 | 2 | done | 2026-07-13 | Models, auth, API routes |
 | 3 | done | 2026-07-13 | Frontend scaffold + components |
-| 4 | pending | | CI, security, docs, PR |
+| 4 | in_progress | 2026-07-13 | CI, security, docs, PR |
 
 ## Day 1 Summary — 2026-07-12
 - Created branch `tech-migration-plan` from `main`; pushed to origin.

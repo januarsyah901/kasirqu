@@ -1,137 +1,160 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
-- [Security Policy](#security-policy)
-  - [Supported Versions](#supported-versions)
-  - [Security Advisories](#security-advisories)
-  - [Reporting a Vulnerability](#reporting-a-vulnerability)
-  - [Disclosure Process](#disclosure-process)
-
-<!-- END doctoc generated TOC please keep comment here to allow update -->
-
 # Security Policy
 
 ## Supported Versions
 
-We release patches for security vulnerabilities.
-
-| Version   | Supported          |
-| --------- | ------------------ |
-| >= 3.4.2  | :white_check_mark: |
-| < 3.4.2   | :x:                |
-
-## Security Advisories
-
-For a complete list of published and draft security advisories with CVE details, see our [GitHub Security Advisories page](https://github.com/opensourcepos/opensourcepos/security/advisories).
+| Version | Supported          |
+| ------- | ------------------ |
+| 1.x     | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
-**Option 1: GitHub Security Advisory (Preferred)**
+If you discover a security vulnerability in KasirQu, please email the maintainers at **security@kasirqu.local** (replace with actual contact). Do not open public GitHub issues for security vulnerabilities.
 
-1. Create a draft security advisory directly on GitHub:
-   - Go to https://github.com/opensourcepos/opensourcepos/security/advisories
-   - Click "New draft security advisory"
-   - Fill in the vulnerability details using our [template below](#vulnerability-template)
-   - Submit as **draft** (not published)
+We aim to respond within 48 hours and provide a fix within 14 days for critical vulnerabilities.
 
-2. Notify us for triage:
-   - Send an email to **[jeroen@steganos.dev](mailto:jeroen@steganos.dev)** with:
-     - Subject: `[GHSA] Brief description of vulnerability`
-     - Link to the draft advisory
-     - Brief summary
+## Security Measures Implemented
 
-**Option 2: Email Report**
+### Application Security
 
-Send vulnerability details to **[jeroen@steganos.dev](mailto:jeroen@steganos.dev)**.
+1. **Authentication & Authorization**
+   - Laravel Sanctum for stateless API token authentication
+   - CSRF protection enabled for all state-changing requests
+   - Password hashing using bcrypt (cost factor 12)
+   - Rate limiting on login endpoints (5 attempts per minute)
 
-You will receive a response within 48 hours. Confirmed vulnerabilities will be patched within a few days depending on complexity.
+2. **Input Validation & Sanitization**
+   - All API inputs validated using Laravel FormRequest classes
+   - SQL injection prevention via Eloquent ORM parameterized queries
+   - XSS protection through automatic output escaping in Blade templates
+   - File upload validation (type, size, MIME checks)
 
-## Disclosure Process
+3. **Session Security**
+   - HTTP-only cookies for session tokens
+   - Secure flag enabled in production (HTTPS only)
+   - Session timeout after 2 hours of inactivity
+   - Redis-backed session store for scalability
 
-### Timeline
+4. **API Security**
+   - Bearer token authentication (Sanctum)
+   - CORS configured to allow only trusted origins
+   - API versioning (`/api/v1/`) to maintain backward compatibility
+   - Request size limits (10MB max payload)
 
-| Step | Timeline | Action |
-|------|----------|--------|
-| 1. Report received | Day 0 | We acknowledge within 48 hours |
-| 2. Triage & confirmation | Day 1-3 | We validate the vulnerability |
-| 3. Fix development | Day 3-7 | We develop and test the fix |
-| 4. Patch release | Day 7-10 | We release a security patch |
-| 5. CVE request | Day 7-14 | We request CVE from GitHub (if applicable) |
-| 6. Advisory published | Day 14 | We publish the advisory with credit |
-| 7. Public disclosure | Day 14+ | Full disclosure after patch release |
+### Infrastructure Security
 
-### CVE Process
+1. **HTTP Headers** (configured in `nginx/default.conf`)
+   ```
+   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'
+   X-Content-Type-Options: nosniff
+   X-Frame-Options: DENY
+   X-XSS-Protection: 1; mode=block
+   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+   Referrer-Policy: strict-origin-when-cross-origin
+   ```
 
-**We request CVE identifiers through GitHub's security advisory system.** This is the preferred and easiest method:
+2. **Docker Security**
+   - Non-root user for PHP-FPM container
+   - Read-only filesystem where possible
+   - Minimal base images (Alpine Linux)
+   - Regular vulnerability scanning via Trivy in CI pipeline
 
-1. After we confirm and fix the vulnerability, we'll request a CVE through GitHub
-2. GitHub coordinates with MITRE on our behalf
-3. The CVE is automatically linked to the advisory
-4. You'll be credited as the reporter in the published advisory
+3. **Database Security**
+   - MySQL 8.0 with strong password requirements
+   - Database credentials via environment variables only
+   - Separate database users for app vs migrations
+   - Automated backups with encryption at rest
 
-**Already have a CVE?** If you've already obtained a CVE from another source (e.g., VulDB, CVE.MITRE.ORG), please include it in your report or advisory. We'll update our advisory to reference the existing CVE.
+### Environment Configuration
 
-### No Bug Bounty Program
+**Never commit `.env` files.** Use `.env.example` as a template.
 
-**Important:** Open Source Point of Sale does not offer a bug bounty program.
+Required security configurations in `.env`:
 
-- All security research and vulnerability triage is done on a **voluntary basis** in our free time
-- We do not offer monetary rewards for vulnerability reports
-- We do credit reporters in published advisories (unless anonymity is requested)
-- We greatly appreciate the security research community's efforts to help improve project security
-
-### Security Best Practices for Researchers
-
-- **Do not** access, modify, or delete data that doesn't belong to you
-- **Do not** perform denial of service attacks
-- **Do not** publicly disclose vulnerabilities before we've had time to fix them
-- **Do** provide sufficient information to reproduce the vulnerability
-- **Do** allow us reasonable time to fix before public disclosure
-- **Do** report through official channels (GitHub advisories or email)
-
-### Vulnerability Template
-
-When creating a draft advisory, please include:
-
-```
-## Summary
-[Brief description of the vulnerability]
-
-## Impact
-- **Confidentiality:** [High/Medium/Low - what data can be exposed]
-- **Integrity:** [High/Medium/Low - what can be modified]
-- **Availability:** [High/Medium/Low - service disruption potential]
-- **Privilege Required:** [None/Low/High - authentication level needed]
-- **CVSS v3.1:** [Score] ([Vector string])
-
-## Details
-[Technical details about the vulnerability]
-
-**Affected Code:**
-```php
-// Path to affected file and vulnerable code
-```
-
-**Attack Vector:**
-[How an attacker can exploit this]
-
-## Proof of Concept
 ```bash
-# Steps to reproduce
+# Application
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=base64:... # Generate with: php artisan key:generate
+
+# Database - Use strong passwords
+DB_PASSWORD=<randomly-generated-32-char-string>
+
+# Session - Use secure driver
+SESSION_DRIVER=redis
+SESSION_SECURE_COOKIE=true
+SESSION_HTTP_ONLY=true
+
+# CORS - Restrict to your frontend domain
+SANCTUM_STATEFUL_DOMAINS=app.kasirqu.com
+SESSION_DOMAIN=.kasirqu.com
+
+# Rate limiting
+THROTTLE_LOGIN=5,1  # 5 attempts per minute
 ```
 
-## Patch
-[Suggested fix or approach]
+### Dependency Management
 
-## Affected Versions
-- OpenSourcePOS X.Y.Z and earlier
+- Composer dependencies pinned to specific versions
+- `composer audit` runs in CI to detect known vulnerabilities
+- npm dependencies audited via `npm audit` in CI
+- Automated dependency updates via Dependabot (see `.github/dependabot.yml`)
 
-## Credit
-[Your GitHub username or preferred name]
-```
+### Logging & Monitoring
+
+- Failed authentication attempts logged with IP address
+- Error logs sanitized (no sensitive data in stack traces)
+- Audit trail for financial transactions (sales, refunds)
+- Log rotation configured (7 days retention)
+
+## Security Checklist for Deployment
+
+- [ ] Generate new `APP_KEY` in production
+- [ ] Use HTTPS/TLS certificates (Let's Encrypt recommended)
+- [ ] Configure firewall to allow only ports 80, 443
+- [ ] Enable HSTS preloading
+- [ ] Set `APP_DEBUG=false` and `APP_ENV=production`
+- [ ] Use strong database passwords (32+ characters)
+- [ ] Configure Redis password authentication
+- [ ] Enable automated backups (database + uploaded files)
+- [ ] Set up log monitoring (Sentry, Papertrail, or similar)
+- [ ] Configure rate limiting on nginx level
+- [ ] Review and restrict CORS domains
+- [ ] Enable fail2ban or similar intrusion prevention
+- [ ] Schedule regular security audits
+
+## Third-Party Security Tools
+
+Optional tools for enhanced security:
+
+1. **OWASP ZAP** - Automated penetration testing
+   ```bash
+   docker run -t owasp/zap2docker-stable zap-baseline.py -t https://your-domain.com
+   ```
+
+2. **Snyk** - Dependency vulnerability scanning
+   ```bash
+   npm install -g snyk
+   snyk test
+   ```
+
+3. **SonarQube** - Static code analysis
+   ```bash
+   docker run -d --name sonarqube -p 9000:9000 sonarqube:community
+   ```
+
+## Compliance
+
+- GDPR: User data export/deletion endpoints available
+- PCI-DSS: Payment processing via third-party gateway (no card storage)
+- Data retention: Configurable in admin panel (default 7 years for financial records)
+
+## Security Updates
+
+Subscribe to security advisories:
+- Laravel: https://github.com/laravel/framework/security/advisories
+- PHP: https://www.php.net/security/
+- Node.js: https://nodejs.org/en/security/
 
 ---
 
-**Thank you to all security researchers who have contributed to making Open Source Point of Sale more secure.** Your voluntary efforts help protect thousands of users worldwide and contribute to a safer, more trustworthy free and open-source software ecosystem. We deeply appreciate your responsible disclosure and the time you invest in improving our project.
-
-If you've reported a vulnerability and would like to discuss CVE coordination or have questions about the process, please reach out to us at [jeroen@steganos.dev](mailto:jeroen@steganos.dev).
+Last updated: 2026-07-13
