@@ -7,10 +7,10 @@ use App\Http\Resources\SaleResource;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\SalePayment;
+use App\Http\Requests\SaleStoreRequest;
 use App\Models\Customer;
 use App\Models\Employee;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class SaleController extends Controller
 {
@@ -93,30 +93,8 @@ class SaleController extends Controller
      *     @OA\Response(response=201, description="Created")
      * )
      */
-    public function store(Request $request)
+    public function store(SaleStoreRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'customer_id' => 'nullable|exists:customers,person_id',
-            'employee_id' => 'required|exists:employees,person_id',
-            'comment' => 'nullable|string|max:255',
-            'invoice_number' => 'nullable|string|max:32|unique:sales,invoice_number',
-            'sale_type' => 'nullable|string|max:50',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'required|exists:items,item_id',
-            'items.*.quantity_purchased' => 'required|numeric|min:0.001',
-            'items.*.item_unit_price' => 'required|numeric|min:0',
-            'items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
-            'items.*.item_location' => 'required|exists:stock_locations,id',
-            'items.*.description' => 'nullable|string|max:30',
-            'payments' => 'nullable|array',
-            'payments.*.payment_type' => 'required|string|max:40',
-            'payments.*.payment_amount' => 'required|numeric|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         $sale = \DB::transaction(function () use ($request) {
             $sale = Sale::create([
                 'customer_id' => $request->customer_id,

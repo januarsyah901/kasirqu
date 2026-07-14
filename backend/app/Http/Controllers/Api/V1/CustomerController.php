@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CustomerStoreRequest;
+use App\Http\Requests\CustomerUpdateRequest;
 use App\Http\Resources\CustomerResource;
 use App\Models\Customer;
 use App\Models\Person;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class CustomerController extends Controller
 {
@@ -43,21 +44,8 @@ class CustomerController extends Controller
      *     @OA\Response(response=201, description="Created")
      * )
      */
-    public function store(Request $request)
+    public function store(CustomerStoreRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone_number' => 'nullable|string|max:50',
-            'company_name' => 'nullable|string|max:255',
-            'account_number' => 'nullable|string|max:255|unique:customers,account_number',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         $person = Person::create([
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
@@ -104,21 +92,9 @@ class CustomerController extends Controller
      *     @OA\Response(response=200, description="Updated")
      * )
      */
-    public function update(Request $request, int $id)
+    public function update(CustomerUpdateRequest $request, int $id)
     {
         $customer = Customer::with('person')->findOrFail($id);
-
-        $validator = Validator::make($request->all(), [
-            'first_name' => 'sometimes|string|max:255',
-            'last_name' => 'sometimes|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'company_name' => 'nullable|string|max:255',
-            'account_number' => 'nullable|string|max:255|unique:customers,account_number,' . $id . ',person_id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
 
         $personData = [];
         if ($request->has('first_name')) $personData['first_name'] = $request->first_name;

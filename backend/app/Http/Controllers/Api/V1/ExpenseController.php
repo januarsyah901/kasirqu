@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ExpenseStoreRequest;
+use App\Http\Requests\ExpenseUpdateRequest;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class ExpenseController extends Controller
 {
@@ -43,16 +44,9 @@ class ExpenseController extends Controller
         return new ExpenseResource($expense);
     }
 
-    public function store(Request $request)
+    public function store(ExpenseStoreRequest $request)
     {
-        $data = $request->validate([
-            'date' => 'required|date',
-            'amount' => 'required|numeric|min:0',
-            'category' => 'required|string|max:128',
-            'description' => 'nullable|string|max:255',
-            'employee_id' => 'required|exists:employees,person_id',
-            'location_id' => 'required|exists:stock_locations,id',
-        ]);
+        $data = $request->validated();
 
         $data['deleted'] = false;
         $expense = Expense::create($data);
@@ -63,18 +57,11 @@ class ExpenseController extends Controller
             ->setStatusCode(201);
     }
 
-    public function update(Request $request, int $id)
+    public function update(ExpenseUpdateRequest $request, int $id)
     {
         $expense = Expense::where('deleted', false)->findOrFail($id);
 
-        $data = $request->validate([
-            'date' => 'sometimes|date',
-            'amount' => 'sometimes|numeric|min:0',
-            'category' => 'sometimes|string|max:128',
-            'description' => 'nullable|string|max:255',
-            'employee_id' => 'sometimes|exists:employees,person_id',
-            'location_id' => 'sometimes|exists:stock_locations,id',
-        ]);
+        $data = $request->validated();
 
         $expense->update($data);
 

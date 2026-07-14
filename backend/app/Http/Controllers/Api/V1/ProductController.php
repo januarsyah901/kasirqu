@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductStoreRequest;
+use App\Http\Requests\ProductUpdateRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Item;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -42,22 +43,9 @@ class ProductController extends Controller
      *     @OA\Response(response=201, description="Created")
      * )
      */
-    public function store(Request $request)
+    public function store(ProductStoreRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'nullable|string|max:255',
-            'item_number' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:255',
-            'cost_price' => 'required|numeric|min:0',
-            'unit_price' => 'required|numeric|min:0',
-            'reorder_level' => 'nullable|numeric|min:0',
-            'supplier_id' => 'nullable|exists:suppliers,person_id',
-            'tax_category_id' => 'nullable|exists:tax_categories,id',
-            'is_serialized' => 'boolean',
-            'stock_type' => 'nullable|string|max:50',
-            'item_type' => 'nullable|string|max:50',
-        ]);
+        $data = $request->validated();
 
         $data['is_serialized'] = $data['is_serialized'] ?? false;
         $item = Item::create($data);
@@ -90,21 +78,11 @@ class ProductController extends Controller
      *     @OA\Response(response=200, description="Updated")
      * )
      */
-    public function update(Request $request, int $id)
+    public function update(ProductUpdateRequest $request, int $id)
     {
         $item = Item::where('item_id', $id)->where('deleted', false)->firstOrFail();
 
-        $data = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'category' => 'nullable|string|max:255',
-            'item_number' => 'nullable|string|max:255',
-            'unit_price' => 'sometimes|numeric|min:0',
-            'cost_price' => 'sometimes|numeric|min:0',
-            'reorder_level' => 'nullable|numeric|min:0',
-            'supplier_id' => 'nullable|exists:suppliers,person_id',
-            'tax_category_id' => 'nullable|exists:tax_categories,id',
-            'is_serialized' => 'boolean',
-        ]);
+        $data = $request->validated();
 
         $item->update($data);
 
