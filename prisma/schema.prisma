@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
+}
+
+model Product {
+  id               String            @id @default(cuid())
+  name             String
+  categoryId       String
+  category         Category          @relation(fields: [categoryId], references: [id])
+  unit             String
+  buyPrice         Decimal
+  sellPrice        Decimal
+  stock            Decimal           @default(0)
+  minStock         Decimal           @default(5)
+  imageUrl         String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  transactionItems TransactionItem[]
+  stockLogs        StockLog[]
+}
+
+model StockLog {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  type      String
+  quantity  Decimal
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model Transaction {
+  id             String            @id @default(cuid())
+  invoiceNumber  String            @unique
+  subtotal       Decimal
+  discount       Decimal           @default(0)
+  total          Decimal
+  paidAmount     Decimal
+  changeAmount   Decimal
+  status         String            @default("COMPLETED")
+  voidReason     String?
+  voidedAt       DateTime?
+  createdAt      DateTime          @default(now())
+  items          TransactionItem[]
+  debts          Debt[]
+}
+
+model TransactionItem {
+  id            String       @id @default(cuid())
+  transactionId String
+  transaction   Transaction  @relation(fields: [transactionId], references: [id])
+  productId     String
+  product       Product      @relation(fields: [productId], references: [id])
+  quantity      Decimal
+  priceAtSale   Decimal
+  discount      Decimal      @default(0)
+  subtotal      Decimal
+}
+
+model Debt {
+  id            String      @id @default(cuid())
+  customerName  String
+  customerPhone String?
+  amount        Decimal
+  paidAmount    Decimal     @default(0)
+  status        String      @default("UNPAID")
+  note          String?
+  transactionId String?
+  transaction   Transaction? @relation(fields: [transactionId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Settings {
+  id                       String  @id @default(cuid())
+  storeName                String  @default("Sidomoro")
+  telegramBotToken         String?
+  telegramChatId           String?
+  lowStockThresholdDefault Decimal @default(5)
+  dailyReportTime          String  @default("21:00")
+}
