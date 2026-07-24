@@ -9,10 +9,12 @@ export const categorySchema = z.object({
 export const productSchema = z.object({
   name: z.string().min(1, "Nama produk wajib diisi"),
   categoryId: z.string().min(1, "Kategori wajib dipilih"),
-  unit: z.string().min(1, "Satuan wajib diisi"),
-  buyPrice: z.coerce.number().min(0, "Harga beli tidak boleh negatif"),
-  sellPrice: z.coerce.number().min(0, "Harga jual tidak boleh negatif"),
-  stock: z.coerce.number().min(0, "Stok tidak boleh negatif").default(0),
+  unit: z.string().min(1, "Satuan wajib diisi"), // sale unit
+  baseUnit: z.string().min(1, "Satuan dasar wajib diisi"),
+  unitsPerSale: z.coerce.number().int().min(1, "Faktor konversi wajib ≥ 1"),
+  buyPrice: z.coerce.number().min(0, "Harga beli tidak boleh negatif"), // per sale unit
+  sellPrice: z.coerce.number().min(0, "Harga jual tidak boleh negatif"), // per sale unit
+  stock: z.coerce.number().min(0, "Stok tidak boleh negatif").default(0), // in sale unit
   minStock: z.coerce.number().min(0, "Min stok tidak boleh negatif").default(5),
   imageUrl: z.string().optional().nullable(),
 });

@@ -28,6 +28,9 @@ model Product {
   categoryId       String
   category         Category          @relation(fields: [categoryId], references: [id])
   unit             String
+  baseUnit         String            @default("pcs")
+  saleUnit         String            @default("pcs")
+  unitsPerSale     Int               @default(1)
   buyPrice         Decimal
   sellPrice        Decimal
   stock            Decimal           @default(0)

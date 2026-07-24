@@ -66,18 +66,23 @@ export async function POST(request: Request) {
           throw new Error(`Produk ${item.productId} tidak ditemukan`);
         }
 
+        // product fields: sellPrice, buyPrice per baseUnit; stock in baseUnit; unitsPerSale
+        const unitsPerSale = Number(product.unitsPerSale);
+        const qtyBase = Number(item.quantity) * unitsPerSale; // convert to base unit
         const currentStock = Number(product.stock);
-        if (currentStock < Number(item.quantity)) {
-          throw new Error(`Stok ${product.name} tidak cukup (tersedia: ${currentStock})`);
+        if (currentStock < qtyBase) {
+          throw new Error(`Stok ${product.name} tidak cukup (tersedia: ${currentStock / unitsPerSale} ${product.unit})`);
         }
 
-        const itemSubtotal = Number(product.sellPrice) * Number(item.quantity) - Number(item.discount);
+        const pricePerBase = Number(product.sellPrice); // per baseUnit
+        const pricePerSale = pricePerBase * unitsPerSale; // per saleUnit (what user sees)
+        const itemSubtotal = pricePerSale * Number(item.quantity) - Number(item.discount);
         subtotal += itemSubtotal;
 
         itemsData.push({
           productId: item.productId,
-          quantity: Number(item.quantity),
-          priceAtSale: Number(product.sellPrice),
+          quantity: Number(item.quantity), // keep in saleUnit for display/storage
+          priceAtSale: pricePerSale, // per saleUnit
           discount: Number(item.discount),
           subtotal: itemSubtotal,
         });
@@ -115,23 +120,33 @@ export async function POST(request: Request) {
         },
       });
 
-      // Update stock for each item
+      // Update stock and logs
       for (const item of validated.items) {
+        const product = await tx.product.findUnique({
+          where: { id: item.productId },
+        });
+        if (!product) continue; // safety
+
+        const unitsPerSale = Number(product.unitsPerSale);
+        const qtyBase = Number(item.quantity) * unitsPerSale;
+
+        // Decrease stock in baseUnit
         await tx.product.update({
           where: { id: item.productId },
-          data: { stock: { decrement: Number(item.quantity) } },
+          data: { stock: { decrement: qtyBase } },
         });
 
+        // Stock log
         await tx.stockLog.create({
           data: {
             productId: item.productId,
             type: "OUT",
-            quantity: Number(item.quantity),
+            quantity: qtyBase, // log in base unit
             note: `Transaksi ${invoiceNumber}`,
           },
         });
 
-        // Check low stock
+        // Low stock alert (optional)
         checkAndSendLowStockAlert(item.productId).catch(console.error);
       }
 

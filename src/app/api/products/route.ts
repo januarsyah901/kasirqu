@@ -53,16 +53,36 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validated = productSchema.parse(body);
 
+    const {
+      name,
+      categoryId,
+      unit: saleUnit,
+      baseUnit,
+      unitsPerSale,
+      buyPrice, // per saleUnit
+      sellPrice, // per saleUnit
+      stock, // in saleUnit
+      minStock,
+      imageUrl,
+    } = validated;
+
+    // Convert to base unit (the unit we store for stock/price)
+    const stockBase = Number(stock) * Number(unitsPerSale);
+    const buyPriceBase = Number(buyPrice) / Number(unitsPerSale); // per baseUnit
+    const sellPriceBase = Number(sellPrice) / Number(unitsPerSale); // per baseUnit
+
     const product = await db.product.create({
       data: {
-        name: validated.name,
-        categoryId: validated.categoryId,
-        unit: validated.unit,
-        buyPrice: validated.buyPrice,
-        sellPrice: validated.sellPrice,
-        stock: validated.stock,
-        minStock: validated.minStock,
-        imageUrl: validated.imageUrl,
+        name,
+        categoryId,
+        unit: saleUnit, // keep sale unit for display
+        baseUnit,
+        unitsPerSale: Number(unitsPerSale),
+        buyPrice: buyPriceBase,
+        sellPrice: sellPriceBase,
+        stock: stockBase,
+        minStock: Number(minStock),
+        imageUrl,
       },
       include: { category: true },
     });
