@@ -5,6 +5,7 @@ import { formatRupiah, formatDateTime, cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus, Wallet, Search } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface Debt {
   id: string;
@@ -262,29 +263,30 @@ export default function BonPage() {
         <div className="p-4 border-b-[3px] border-black flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h2 className="font-black text-sm uppercase tracking-wider text-black">DAFTAR BON PELANGGAN</h2>
           
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black stroke-[2.5px]" />
+            <div className="relative w-full sm:w-60">
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-black stroke-[2.5px]" />
               <input
                 placeholder="Cari pelanggan..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 pr-3 py-2 border-2 border-black bg-white font-bold text-black focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs w-full sm:w-60"
+                className="h-10 w-full pl-9 pr-3 border-2 border-black bg-white font-bold text-black focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs"
               />
             </div>
             
             {/* Status Select Filter */}
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border-2 border-black bg-white text-black font-bold focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs cursor-pointer w-full sm:w-48"
-            >
-              <option value="all">Semua Status</option>
-              <option value="UNPAID">Belum Dibayar</option>
-              <option value="PARTIAL">Angsuran</option>
-              <option value="PAID">Lunas</option>
-            </select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="h-10 w-full sm:w-48 px-3 border-2 border-black bg-white text-black font-bold focus:outline-none focus:ring-0 focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs">
+                <SelectValue placeholder="Semua Status" />
+              </SelectTrigger>
+              <SelectContent className="border-2 border-black bg-white text-black font-bold rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <SelectItem value="all" className="text-xs font-bold rounded-none">Semua Status</SelectItem>
+                <SelectItem value="UNPAID" className="text-xs font-bold rounded-none">Belum Dibayar</SelectItem>
+                <SelectItem value="PARTIAL" className="text-xs font-bold rounded-none">Angsuran</SelectItem>
+                <SelectItem value="PAID" className="text-xs font-bold rounded-none">Lunas</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

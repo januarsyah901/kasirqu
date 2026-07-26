@@ -9,6 +9,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Controller } from "react-hook-form";
 
 const productSchema = z.object({
   name: z.string().min(1, "Nama produk wajib diisi"),
@@ -64,7 +66,7 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -93,7 +95,7 @@ export default function ProductsPage() {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      if (categoryFilter) params.set("categoryId", categoryFilter);
+      if (categoryFilter && categoryFilter !== "all") params.set("categoryId", categoryFilter);
       const res = await fetch(`/api/products?${params.toString()}`);
       const data = await res.json();
       setProducts(data.products || []);
@@ -352,17 +354,24 @@ export default function ProductsPage() {
                 {/* Category Selection */}
                 <div className="space-y-1">
                   <label className="text-xs font-black uppercase text-black block">Kategori</label>
-                  <select
-                    {...form.register("categoryId")}
-                    className="w-full p-2.5 border-2 border-black bg-white text-black font-bold focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs"
-                  >
-                    <option value="">Pilih kategori...</option>
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
+                  <Controller
+                    name="categoryId"
+                    control={form.control}
+                    render={({ field }) => (
+                      <Select value={field.value || undefined} onValueChange={field.onChange}>
+                        <SelectTrigger className="w-full h-auto p-2.5 border-2 border-black bg-white text-black font-bold focus:outline-none focus:ring-0 focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs">
+                          <SelectValue placeholder="Pilih kategori..." />
+                        </SelectTrigger>
+                        <SelectContent className="border-2 border-black bg-white text-black font-bold rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id} className="text-xs font-bold rounded-none">
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                   {form.formState.errors.categoryId && (
                     <p className="text-[10px] font-black uppercase text-red-600 mt-1">{form.formState.errors.categoryId.message as string}</p>
                   )}
@@ -488,30 +497,31 @@ export default function ProductsPage() {
         <div className="p-4 border-b-[3px] border-black flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h2 className="font-black text-sm uppercase tracking-wider text-black">DAFTAR PRODUK</h2>
           
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black stroke-[2.5px]" />
+            <div className="relative w-full sm:w-60">
+              <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-black stroke-[2.5px]" />
               <input
                 placeholder="Cari produk..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 pr-3 py-2 border-2 border-black bg-white font-bold text-black focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs w-full sm:w-60"
+                className="h-10 w-full pl-9 pr-3 border-2 border-black bg-white font-bold text-black focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs"
               />
             </div>
             {/* Category Select Filter */}
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-3 py-2 border-2 border-black bg-white text-black font-bold focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs cursor-pointer w-full sm:w-48"
-            >
-              <option value="">Semua Kategori</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="h-10 w-full sm:w-48 px-3 border-2 border-black bg-white text-black font-bold focus:outline-none focus:ring-0 focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs">
+                <SelectValue placeholder="Semua Kategori" />
+              </SelectTrigger>
+              <SelectContent className="border-2 border-black bg-white text-black font-bold rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <SelectItem value="all" className="text-xs font-bold rounded-none">Semua Kategori</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id} className="text-xs font-bold rounded-none">
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

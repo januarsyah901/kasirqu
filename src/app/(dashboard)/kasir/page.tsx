@@ -11,7 +11,6 @@ import {
   Printer,
   X,
   Ban,
-  Barcode,
   Coffee,
   Pizza,
   Cookie,
@@ -308,27 +307,18 @@ export default function KasirPage() {
       {/* Left: Product Grid & Controls */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
         
-        {/* Top bar: Search & Scan */}
-        <div className="flex gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-black stroke-[2.5px]" />
-            <input
-              ref={searchRef}
-              type="text"
-              placeholder="Cari produk... (Ctrl+K)"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border-[3px] border-black bg-white font-bold text-black placeholder-zinc-500 focus:outline-none focus:bg-zinc-50 rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm"
-              autoFocus
-            />
-          </div>
-          <button 
-            onClick={() => toast.info("Barcode scanner siap (Simulasi)")}
-            className="flex items-center gap-2 px-5 py-3 border-[3px] border-black bg-[#1E3FCF] text-white font-black uppercase text-xs rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all cursor-pointer"
-          >
-            <Barcode className="h-5 w-5 stroke-[2.5px]" />
-            SCAN
-          </button>
+        {/* Top bar: Search */}
+        <div className="relative w-full">
+          <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-5 w-5 -translate-y-1/2 text-black stroke-[2.5px]" />
+          <input
+            ref={searchRef}
+            type="text"
+            placeholder="Cari produk... (Ctrl+K)"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border-[3px] border-black bg-white font-bold text-black placeholder-zinc-500 focus:outline-none focus:bg-zinc-50 rounded-none shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] text-sm"
+            autoFocus
+          />
         </div>
 
         {/* Categories Pills */}
