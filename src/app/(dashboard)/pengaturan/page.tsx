@@ -77,22 +77,34 @@ export default function SettingsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="border-[3px] border-black bg-[#FFD400] text-black font-black uppercase px-6 py-3.5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-sm tracking-widest">
-          Memuat Pengaturan...
+return (
+    <div className="space-y-6 text-black font-sans">
+        <div className="h-8 w-2/5 bg-zinc-200 animate-pulse rounded-none border border-black/10" />
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="border-[3px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none animate-pulse">
+              <div className="border-b-[3px] border-black p-4 bg-zinc-50 h-16" />
+              <div className="p-4 space-y-4">
+                <div className="h-4 bg-zinc-200 w-1/4 rounded" />
+                <div className="h-10 bg-zinc-200 rounded-none border border-black/10" />
+                <div className="h-10 bg-zinc-200 rounded-none border border-black/10" />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-2xl text-black font-sans">
+    <div className="space-y-6 text-black font-sans">
       
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-black uppercase tracking-widest">Pengaturan</h1>
-        <p className="text-xs font-bold text-zinc-500 uppercase tracking-wide mt-1">Konfigurasi profile toko & integrasi bot</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black uppercase tracking-widest">Pengaturan</h1>
+          <p className="text-xs font-bold text-zinc-500 uppercase tracking-wide mt-1">Konfigurasi profile toko & integrasi bot</p>
+        </div>
       </div>
 
       {/* Store Info Card */}
