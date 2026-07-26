@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Controller } from "react-hook-form";
 
+const UNITS = ["pcs", "kg", "liter", "dus", "pack", "botol", "kaleng", "meter", "rim"] as const;
+
 const productSchema = z.object({
   name: z.string().min(1, "Nama produk wajib diisi"),
   categoryId: z.string().min(1, "Kategori wajib dipilih"),
@@ -433,10 +435,23 @@ export default function ProductsPage() {
                   {/* Unit */}
                   <div className="space-y-1">
                     <label className="text-xs font-black uppercase text-black block">Satuan</label>
-                    <input
-                      {...form.register("unit")}
-                      placeholder="pcs, kg, dus..."
-                      className="w-full p-2.5 border-2 border-black bg-white text-black font-bold focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs"
+                    <Controller
+                      name="unit"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className="w-full h-auto p-2.5 border-2 border-black bg-white text-black font-bold focus:outline-none focus:ring-0 focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs">
+                            <SelectValue placeholder="Pilih satuan..." />
+                          </SelectTrigger>
+                          <SelectContent className="border-2 border-black bg-white text-black font-bold rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                            {UNITS.map((u) => (
+                              <SelectItem key={u} value={u} className="text-xs font-bold rounded-none">
+                                {u}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
                     {form.formState.errors.unit && (
                       <p className="text-[10px] font-black uppercase text-red-600 mt-1">{form.formState.errors.unit.message as string}</p>
