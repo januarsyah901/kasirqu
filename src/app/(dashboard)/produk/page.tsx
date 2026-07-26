@@ -14,6 +14,18 @@ import { Controller } from "react-hook-form";
 
 const UNITS = ["pcs", "kg", "liter", "dus", "pack", "botol", "kaleng", "meter", "rim"] as const;
 
+const UNIT_STEP: Record<string, number> = {
+  kg: 0.5,
+  liter: 0.5,
+  meter: 0.1,
+  pcs: 1,
+  dus: 1,
+  pack: 1,
+  botol: 1,
+  kaleng: 1,
+  rim: 1,
+};
+
 const productSchema = z.object({
   name: z.string().min(1, "Nama produk wajib diisi"),
   categoryId: z.string().min(1, "Kategori wajib dipilih"),
@@ -90,7 +102,10 @@ export default function ProductsPage() {
       minStock: 5,
       imageUrl: "",
     },
-  });
+});
+  // Watch current unit for dynamic step
+  const watchedUnit = form.watch("unit");
+  const step = useMemo(() => (watchedUnit === "kg" ? 0.5 : 1), [watchedUnit]);
 
   // Image upload state
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -464,6 +479,7 @@ export default function ProductsPage() {
                     <input
                       type="number"
                       min="0"
+                      step={step}
                       {...form.register("minStock")}
                       className="w-full p-2.5 border-2 border-black bg-white text-black font-mono font-bold focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs"
                     />
@@ -511,7 +527,7 @@ export default function ProductsPage() {
                   <input
                     type="number"
                     min="0"
-                    step="0.01"
+                    step={step}
                     placeholder="0"
                     {...form.register("stock")}
                     className="w-full p-2.5 border-2 border-black bg-white text-black font-mono font-bold focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs"
