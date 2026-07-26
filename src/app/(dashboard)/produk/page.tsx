@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Search, Edit, Trash2, AlertTriangle, Package, Tags, FileDown, X } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Plus, Search, Edit, Trash2, AlertTriangle, Package, Tags, FileDown, X, Image, Upload, Loader2, Trash, X as XIcon, ChevronDown, Check } from "lucide-react";
 import { formatRupiah, cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -90,6 +90,54 @@ export default function ProductsPage() {
     },
   });
 
+  // Image upload state
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const uploadImage = async (file: File) => {
+    setUploadingImage(true);
+    setUploadError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload/product-image", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Upload gagal");
+      }
+      const data = await res.json();
+      setImagePreview(data.url);
+      form.setValue("imageUrl", data.url);
+      toast.success("Gambar berhasil diupload");
+    } catch (error: any) {
+      setUploadError(error.message || "Gagal upload gambar");
+      toast.error(error.message || "Gagal upload gambar");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    form.setValue("imageUrl", "");
+    toast.success("Gambar dihapus");
+  };
+
+  const handleImageDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) uploadImage(file);
+  }, []);
+
+  const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadImage(file);
+  }, []);
+
   const fetchProducts = async () => {
     setLoading(true);
     try {
@@ -135,6 +183,7 @@ export default function ProductsPage() {
       toast.success(editingProduct ? "Produk diperbarui" : "Produk ditambahkan");
       setIsDialogOpen(false);
       setEditingProduct(null);
+      setImagePreview(null);
       form.reset({ name: "", categoryId: "", unit: "pcs", buyPrice: 0, sellPrice: 0, stock: 0, minStock: 5, imageUrl: "" });
       fetchProducts();
     } catch (error) {
@@ -154,6 +203,7 @@ export default function ProductsPage() {
     form.setValue("stock", product.stock);
     form.setValue("minStock", product.minStock);
     form.setValue("imageUrl", product.imageUrl || "");
+    setImagePreview(product.imageUrl || null);
     setIsDialogOpen(true);
   };
 
@@ -322,7 +372,9 @@ export default function ProductsPage() {
             setIsDialogOpen(open);
             if (!open) {
               setEditingProduct(null);
-              form.reset({ name: "", categoryId: "", unit: "pcs", buyPrice: 0, sellPrice: 0, stock: 0, minStock: 5 });
+              setImagePreview(null);
+              setUploadError(null);
+              form.reset({ name: "", categoryId: "", unit: "pcs", buyPrice: 0, sellPrice: 0, stock: 0, minStock: 5, imageUrl: "" });
             }
           }}>
             <DialogTrigger asChild>
@@ -454,24 +506,91 @@ export default function ProductsPage() {
                   )}
                 </div>
 
-                {/* Image URL */}
+                {/* Image Upload */}
                 <div className="space-y-1">
-                  <label className="text-xs font-black uppercase text-black block">URL Gambar Produk (Opsional)</label>
-                  <input
-                    type="text"
-                    placeholder="https://example.com/gambar.jpg"
-                    {...form.register("imageUrl")}
-                    className="w-full p-2.5 border-2 border-black bg-white text-black font-bold focus:outline-none focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs"
-                  />
-                  {form.formState.errors.imageUrl && (
-                    <p className="text-[10px] font-black uppercase text-red-600 mt-1">{form.formState.errors.imageUrl.message as string}</p>
-                  )}
+                  <label className="text-xs font-black uppercase text-black block">Gambar Produk (Opsional)</label>
+                  <div className="relative">
+                    <div
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={handleImageDrop}
+                      className={cn(
+                        "border-2 border-dashed border-black bg-zinc-50 p-6 text-center cursor-pointer transition-colors rounded-none",
+                        uploadingImage && "opacity-50 pointer-events-none",
+                        imagePreview && "border-solid bg-white"
+                      )}
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={uploadingImage}
+                      />
+                      {!imagePreview ? (
+                        <>
+                          <Upload className="h-8 w-8 mx-auto text-zinc-400 stroke-[1.5px] mb-2" />
+                          <p className="text-xs font-bold uppercase text-zinc-500 mb-1">
+                            Seret gambar ke sini atau klik untuk upload
+                          </p>
+                          <p className="text-[10px] text-zinc-400">
+                            Maks 2MB • JPG, PNG, WebP
+                          </p>
+                        </>
+                      ) : (
+                        <div className="relative">
+                          <img
+                            src={imagePreview}
+                            alt="Preview"
+                            className="max-h-32 mx-auto rounded-none mx-auto object-contain border border-black/10"
+                          />
+                          <div className="flex justify-center gap-2 mt-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                removeImage();
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 border-2 border-black bg-[#EF4444] text-white font-black uppercase text-[9px] rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+                            >
+                              <Trash className="h-3 w-3 stroke-[2px]" />
+                              Hapus
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                (document.querySelector('input[type="file"]') as HTMLInputElement | null)?.click();
+                              }}
+                              className="flex items-center gap-1 px-3 py-1.5 border-2 border-black bg-zinc-200 text-black font-black uppercase text-[9px] rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-300 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+                            >
+                              <Upload className="h-3 w-3 stroke-[2px]" />
+                              Ganti
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {uploadingImage && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-none z-10">
+                        <div className="flex flex-col items-center gap-2 text-white">
+                          <Loader2 className="h-6 w-6 animate-spin stroke-[2.5px]" />
+                          <span className="text-xs font-bold uppercase">Mengupload...</span>
+                        </div>
+                      </div>
+                    )}
+                    {uploadError && (
+                      <p className="text-[10px] font-black uppercase text-red-600 mt-1">{uploadError}</p>
+                    )}
+                  </div>
                 </div>
 
                 <DialogFooter className="gap-2.5 pt-4">
                   <button
                     type="button"
-                    onClick={() => setIsDialogOpen(false)}
+                    onClick={() => {
+                      setIsDialogOpen(false);
+                      setImagePreview(null);
+                    }}
                     className="flex-1 py-2.5 border-2 border-black bg-white text-black font-black uppercase text-xs rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
                   >
                     Batal
