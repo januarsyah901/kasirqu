@@ -711,7 +711,7 @@ export default function ProductsPage() {
               </thead>
               <tbody>
                 {products.map((product) => {
-                  const isLow = product.stock < product.minStock;
+                  const isLow = Number(product.stock) < Number(product.minStock);
                   const pastelBg = getPastelColor(product.category?.name || "Lainnya");
                   return (
                     <tr key={product.id} className="border-b-2 border-black/10 hover:bg-zinc-50/50">
