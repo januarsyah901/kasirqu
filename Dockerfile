@@ -53,4 +53,4 @@ USER nextjs
 EXPOSE 3000
 
 # Run migrations and start next.js server
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "node node_modules/prisma/bin/index.js migrate deploy && node server.js"]
