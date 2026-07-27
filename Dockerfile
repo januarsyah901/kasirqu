@@ -3,28 +3,24 @@ FROM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files and prisma schema
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
-
-# Install all dependencies (including devDependencies for building)
 RUN npm ci
 
-# Stage 2: Rebuild the source code only when needed
+# Stage 2: Build
 FROM node:20-alpine AS builder
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Generate Prisma Client
+# Generate Prisma Client (uses prisma.config.ts for Prisma v7)
 RUN npx prisma generate
 
-# Build the Next.js application
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
-# Stage 3: Runner
+# Stage 3: Runner - minimal production image
 FROM node:20-alpine AS runner
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
@@ -37,20 +33,23 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy standalone build and static assets
+# Install prisma CLI globally BEFORE switching user so it's on PATH for all users
+# This ensures all transitive deps (effect, @prisma/config, etc.) are present
+RUN npm install -g prisma@7.8.0
+
+# Copy Next.js standalone build and static assets
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-# Copy prisma directory and dependencies for deployment migrations
+
+# Copy prisma schema, config, and migrations for runtime migration
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./prisma.config.ts
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
 
 USER nextjs
 
 EXPOSE 3000
 
-# Run migrations and start next.js server
-CMD ["sh", "-c", "node node_modules/prisma/bin/index.js migrate deploy && node server.js"]
+# Run migrations using globally-installed prisma CLI, then start Next.js
+CMD ["sh", "-c", "prisma migrate deploy && node server.js"]
