@@ -33,9 +33,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Install prisma CLI globally BEFORE switching user so it's on PATH for all users
-# This ensures all transitive deps (effect, @prisma/config, etc.) are present
-RUN npm install -g prisma@7.8.0
+# Install prisma CLI globally and symlink into /app/node_modules
+# so that prisma.config.ts can resolve 'prisma/config' via local module resolution
+RUN npm install -g prisma@7.8.0 && \
+    mkdir -p /app/node_modules && \
+    ln -s /usr/local/lib/node_modules/prisma /app/node_modules/prisma
 
 # Copy Next.js standalone build and static assets
 COPY --from=builder /app/public ./public
