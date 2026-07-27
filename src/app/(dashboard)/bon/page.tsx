@@ -290,7 +290,7 @@ export default function BonPage() {
           </div>
         </div>
 
-        {/* Table Content */}
+        {/* Table Content (Card List on Mobile, Table on Desktop) */}
         <div className="p-0 overflow-x-auto">
           {loading ? (
             <div className="p-6 space-y-4">
@@ -306,40 +306,45 @@ export default function BonPage() {
               </p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b-[3px] border-black bg-zinc-50">
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Pelanggan</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Kontak</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Total Utang</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Dibayar</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Sisa</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Status</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Invoice</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Tanggal</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Mobile Card View (md:hidden) */}
+              <div className="grid grid-cols-1 gap-3 p-3 md:hidden">
                 {filteredDebts.map((debt) => {
                   const remaining = Number(debt.amount) - Number(debt.paidAmount || 0);
                   return (
-                    <tr key={debt.id} className="border-b-2 border-black/10 hover:bg-zinc-50/50">
-                      <td className="p-3 text-xs font-bold uppercase text-black border-r border-black/10">{debt.customerName}</td>
-                      <td className="p-3 text-xs font-bold text-zinc-500 border-r border-black/10">{debt.customerPhone || "-"}</td>
-                      <td className="p-3 text-xs font-mono font-bold text-right text-zinc-700 border-r border-black/10">{formatRupiah(Number(debt.amount))}</td>
-                      <td className="p-3 text-xs font-mono font-bold text-right text-zinc-700 border-r border-black/10">{formatRupiah(Number(debt.paidAmount || 0))}</td>
-                      <td className="p-3 text-xs font-mono font-black text-right border-r border-black/10">
-                        <span className={remaining > 0 ? "text-[#EF4444]" : "text-[#22C55E]"}>
-                          {formatRupiah(remaining)}
+                    <div
+                      key={debt.id}
+                      className="border-2 border-black bg-white p-3.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-black text-xs uppercase text-black">{debt.customerName}</p>
+                          <p className="text-[10px] text-zinc-500 font-bold">{debt.customerPhone || "Tanpa No. HP"}</p>
+                        </div>
+                        {statusBadge(debt.status)}
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 py-2 border-y border-dashed border-black/20 text-center font-mono">
+                        <div>
+                          <p className="text-[9px] font-black uppercase text-zinc-500 font-sans">Total Utang</p>
+                          <p className="text-xs font-bold text-zinc-700">{formatRupiah(Number(debt.amount))}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black uppercase text-zinc-500 font-sans">Dibayar</p>
+                          <p className="text-xs font-bold text-emerald-600">{formatRupiah(Number(debt.paidAmount || 0))}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black uppercase text-zinc-500 font-sans">Sisa</p>
+                          <p className={cn("text-xs font-black", remaining > 0 ? "text-red-500" : "text-emerald-600")}>
+                            {formatRupiah(remaining)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-mono text-zinc-400 font-bold">
+                          {formatDateTime(debt.createdAt)}
                         </span>
-                      </td>
-                      <td className="p-3 text-xs border-r border-black/10">{statusBadge(debt.status)}</td>
-                      <td className="p-3 text-xs font-mono text-zinc-500 border-r border-black/10">
-                        {debt.transaction?.invoiceNumber || "-"}
-                      </td>
-                      <td className="p-3 text-xs font-mono font-bold text-right text-zinc-500 border-r border-black/10">{formatDateTime(debt.createdAt)}</td>
-                      <td className="p-3 text-right">
                         {debt.status !== "PAID" && (
                           <button
                             onClick={() => {
@@ -347,17 +352,71 @@ export default function BonPage() {
                               setPaymentAmount("");
                               setIsPayOpen(true);
                             }}
-                            className="px-3 py-1.5 border-2 border-black bg-[#FFD400] text-black font-black uppercase text-[10px] rounded-none shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] hover:bg-[#ffe140] active:translate-y-[1.5px] active:shadow-none transition-all cursor-pointer"
+                            className="px-4 py-2 border-2 border-black bg-[#FFD400] text-black font-black uppercase text-xs rounded-none shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px]"
                           >
-                            Bayar
+                            Bayar Angsuran
                           </button>
                         )}
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table View */}
+              <table className="hidden md:table w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b-[3px] border-black bg-zinc-50">
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Pelanggan</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Kontak</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Total Utang</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Dibayar</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Sisa</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Status</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Invoice</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Tanggal</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredDebts.map((debt) => {
+                    const remaining = Number(debt.amount) - Number(debt.paidAmount || 0);
+                    return (
+                      <tr key={debt.id} className="border-b-2 border-black/10 hover:bg-zinc-50/50">
+                        <td className="p-3 text-xs font-bold uppercase text-black border-r border-black/10">{debt.customerName}</td>
+                        <td className="p-3 text-xs font-bold text-zinc-500 border-r border-black/10">{debt.customerPhone || "-"}</td>
+                        <td className="p-3 text-xs font-mono font-bold text-right text-zinc-700 border-r border-black/10">{formatRupiah(Number(debt.amount))}</td>
+                        <td className="p-3 text-xs font-mono font-bold text-right text-zinc-700 border-r border-black/10">{formatRupiah(Number(debt.paidAmount || 0))}</td>
+                        <td className="p-3 text-xs font-mono font-black text-right border-r border-black/10">
+                          <span className={remaining > 0 ? "text-[#EF4444]" : "text-[#22C55E]"}>
+                            {formatRupiah(remaining)}
+                          </span>
+                        </td>
+                        <td className="p-3 text-xs border-r border-black/10">{statusBadge(debt.status)}</td>
+                        <td className="p-3 text-xs font-mono text-zinc-500 border-r border-black/10">
+                          {debt.transaction?.invoiceNumber || "-"}
+                        </td>
+                        <td className="p-3 text-xs font-mono font-bold text-right text-zinc-500 border-r border-black/10">{formatDateTime(debt.createdAt)}</td>
+                        <td className="p-3 text-right">
+                          {debt.status !== "PAID" && (
+                            <button
+                              onClick={() => {
+                                setPayingDebt(debt);
+                                setPaymentAmount("");
+                                setIsPayOpen(true);
+                              }}
+                              className="px-3 py-1.5 border-2 border-black bg-[#FFD400] text-black font-black uppercase text-[10px] rounded-none shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] hover:bg-[#ffe140] active:translate-y-[1.5px] active:shadow-none transition-all cursor-pointer"
+                            >
+                              Bayar
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </>
           )}
         </div>
       </div>

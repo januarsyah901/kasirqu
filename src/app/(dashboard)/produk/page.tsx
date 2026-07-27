@@ -675,7 +675,7 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {/* Card Content (Product Table) */}
+        {/* Card Content (Product Table on Desktop, Card List on Mobile) */}
         <div className="p-0 overflow-x-auto">
           {loading ? (
             <div className="p-6 space-y-4">
@@ -696,78 +696,158 @@ export default function ProductsPage() {
               <p className="text-[10px] text-zinc-400 mt-1">Klik "+ Tambah Produk" untuk mulai menginput</p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b-[3px] border-black bg-zinc-50">
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Nama Produk</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Kategori</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Harga Beli</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Harga Jual</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-center">Stok</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-center">Min.</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-center">Status</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Mobile Card View (md:hidden) */}
+              <div className="grid grid-cols-1 gap-3 p-3 md:hidden">
                 {products.map((product) => {
                   const isLow = Number(product.stock) < Number(product.minStock);
-                  const pastelBg = getPastelColor(product.category?.name || "Lainnya");
                   return (
-                    <tr key={product.id} className="border-b-2 border-black/10 hover:bg-zinc-50/50">
-                      <td className="p-3 text-xs font-bold uppercase text-black border-r border-black/10">
-                        <div className="flex items-center gap-2">
-                          {product.imageUrl && (
+                    <div
+                      key={product.id}
+                      className="border-2 border-black bg-white p-3.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex flex-col justify-between gap-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          {product.imageUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={product.imageUrl}
                               alt={product.name}
-                              className="w-8 h-8 object-cover border border-black rounded-none shrink-0"
+                              className="w-12 h-12 object-cover border-2 border-black shrink-0"
                             />
+                          ) : (
+                            <div className="w-12 h-12 border-2 border-black bg-zinc-100 flex items-center justify-center font-black text-xs text-zinc-400 shrink-0">
+                              NO IMG
+                            </div>
                           )}
-                          <span className="truncate">{product.name}</span>
+                          <div>
+                            <p className="font-black text-xs uppercase text-black line-clamp-1">{product.name}</p>
+                            <span className="inline-block mt-0.5 px-2 py-0.5 border border-black bg-zinc-100 text-zinc-700 font-bold text-[9px] uppercase">
+                              {product.category.name}
+                            </span>
+                          </div>
                         </div>
-                      </td>
-                      <td className="p-3 text-xs font-bold uppercase text-zinc-600 border-r border-black/10">{product.category.name}</td>
-                      <td className="p-3 text-xs font-mono font-bold text-right text-zinc-700 border-r border-black/10">{formatRupiah(product.buyPrice)}</td>
-                      <td className="p-3 text-xs font-mono font-bold text-right text-[#1E3FCF] border-r border-black/10">{formatRupiah(product.sellPrice)}</td>
-                      <td className="p-3 text-xs font-mono font-black text-center text-black border-r border-black/10">{product.stock} {product.unit}</td>
-                      <td className="p-3 text-xs font-mono font-bold text-center text-zinc-500 border-r border-black/10">{product.minStock}</td>
-                      <td className="p-3 text-center border-r border-black/10">
                         {isLow ? (
-                          <span className="inline-flex items-center gap-1 border border-black bg-[#EF4444] text-white px-2 py-0.5 font-black uppercase text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                          <span className="inline-flex items-center gap-1 border border-black bg-[#EF4444] text-white px-2 py-0.5 font-black uppercase text-[9px] shrink-0">
                             <AlertTriangle className="h-3 w-3 stroke-[2.5px]" />
                             Menipis
                           </span>
                         ) : (
-                          <span className="inline-flex items-center border border-black bg-[#22C55E] text-white px-2 py-0.5 font-black uppercase text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                          <span className="inline-flex items-center border border-black bg-[#22C55E] text-white px-2 py-0.5 font-black uppercase text-[9px] shrink-0">
                             Aman
                           </span>
                         )}
-                      </td>
-                      <td className="p-3 text-right">
-                        <div className="flex items-center justify-end gap-2.5">
-                          <button 
-                            onClick={() => handleEdit(product)}
-                            className="p-1.5 border border-black bg-[#FFD400] text-black hover:bg-yellow-400 rounded-none shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
-                            aria-label="Edit"
-                          >
-                            <Edit className="h-3.5 w-3.5 stroke-[2px]" />
-                          </button>
-                          <button 
-                            onClick={() => openDeleteDialog(product.id)}
-                            className="p-1.5 border border-black bg-[#EF4444] text-white hover:bg-red-600 rounded-none shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
-                            aria-label="Hapus"
-                          >
-                            <Trash2 className="h-3.5 w-3.5 stroke-[2px]" />
-                          </button>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 py-2 border-y border-dashed border-black/20 text-center font-mono">
+                        <div>
+                          <p className="text-[9px] font-black uppercase text-zinc-500 font-sans">Beli</p>
+                          <p className="text-xs font-bold text-zinc-700">{formatRupiah(product.buyPrice)}</p>
                         </div>
-                      </td>
-                    </tr>
+                        <div>
+                          <p className="text-[9px] font-black uppercase text-zinc-500 font-sans">Jual</p>
+                          <p className="text-xs font-black text-[#1E3FCF]">{formatRupiah(product.sellPrice)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black uppercase text-zinc-500 font-sans">Stok</p>
+                          <p className="text-xs font-black text-black">{product.stock} {product.unit}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleEdit(product)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 border border-black bg-[#FFD400] text-black font-black uppercase text-[10px] shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px]"
+                        >
+                          <Edit className="h-3.5 w-3.5 stroke-[2.5px]" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => openDeleteDialog(product.id)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 border border-black bg-[#EF4444] text-white font-black uppercase text-[10px] shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px]"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 stroke-[2.5px]" />
+                          Hapus
+                        </button>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table View (hidden on mobile) */}
+              <table className="hidden md:table w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b-[3px] border-black bg-zinc-50">
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Nama Produk</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Kategori</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Harga Beli</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Harga Jual</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-center">Stok</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-center">Min.</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-center">Status</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.map((product) => {
+                    const isLow = Number(product.stock) < Number(product.minStock);
+                    return (
+                      <tr key={product.id} className="border-b-2 border-black/10 hover:bg-zinc-50/50">
+                        <td className="p-3 text-xs font-bold uppercase text-black border-r border-black/10">
+                          <div className="flex items-center gap-2">
+                            {product.imageUrl && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={product.imageUrl}
+                                alt={product.name}
+                                className="w-8 h-8 object-cover border border-black rounded-none shrink-0"
+                              />
+                            )}
+                            <span className="truncate">{product.name}</span>
+                          </div>
+                        </td>
+                        <td className="p-3 text-xs font-bold uppercase text-zinc-600 border-r border-black/10">{product.category.name}</td>
+                        <td className="p-3 text-xs font-mono font-bold text-right text-zinc-700 border-r border-black/10">{formatRupiah(product.buyPrice)}</td>
+                        <td className="p-3 text-xs font-mono font-bold text-right text-[#1E3FCF] border-r border-black/10">{formatRupiah(product.sellPrice)}</td>
+                        <td className="p-3 text-xs font-mono font-black text-center text-black border-r border-black/10">{product.stock} {product.unit}</td>
+                        <td className="p-3 text-xs font-mono font-bold text-center text-zinc-500 border-r border-black/10">{product.minStock}</td>
+                        <td className="p-3 text-center border-r border-black/10">
+                          {isLow ? (
+                            <span className="inline-flex items-center gap-1 border border-black bg-[#EF4444] text-white px-2 py-0.5 font-black uppercase text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                              <AlertTriangle className="h-3 w-3 stroke-[2.5px]" />
+                              Menipis
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center border border-black bg-[#22C55E] text-white px-2 py-0.5 font-black uppercase text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                              Aman
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3 text-right">
+                          <div className="flex items-center justify-end gap-2.5">
+                            <button 
+                              onClick={() => handleEdit(product)}
+                              className="p-1.5 border border-black bg-[#FFD400] text-black hover:bg-yellow-400 rounded-none shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+                              aria-label="Edit"
+                            >
+                              <Edit className="h-3.5 w-3.5 stroke-[2px]" />
+                            </button>
+                            <button 
+                              onClick={() => openDeleteDialog(product.id)}
+                              className="p-1.5 border border-black bg-[#EF4444] text-white hover:bg-red-600 rounded-none shadow-[1.5px_1.5px_0px_0px_rgba(0,0,0,1)] active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+                              aria-label="Hapus"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 stroke-[2px]" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </>
           )}
         </div>
       </div>

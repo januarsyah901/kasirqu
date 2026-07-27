@@ -101,6 +101,7 @@ export default function KasirPage() {
   const [customerName, setCustomerName] = useState("");
   const [createDebt, setCreateDebt] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Pagination states
@@ -303,7 +304,7 @@ export default function KasirPage() {
   }
 
   return (
-    <div className="flex flex-col xl:flex-row gap-6 h-[calc(100vh-6.5rem)] overflow-hidden text-black font-sans">
+    <div className="flex flex-col xl:flex-row gap-6 h-auto xl:h-[calc(100vh-6.5rem)] overflow-visible xl:overflow-hidden text-black font-sans pb-16 xl:pb-0">
       {/* Left: Product Grid & Controls */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
         
@@ -352,7 +353,7 @@ export default function KasirPage() {
 
         {/* Product Cards Container */}
         <div className="flex-1 overflow-y-auto pr-1">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {currentProducts.map((product) => {
               const pastelBg = getPastelColor(product.category?.name || "");
               const isLowStock = product.stock <= Number(product.minStock || 5);
@@ -417,11 +418,11 @@ export default function KasirPage() {
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="px-4 py-1.5 border-2 border-black bg-white text-black font-black uppercase text-[10px] rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-50 disabled:pointer-events-none transition-all cursor-pointer"
+            className="px-3 sm:px-4 py-1.5 border-2 border-black bg-white text-black font-black uppercase text-[10px] rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-50 disabled:pointer-events-none transition-all cursor-pointer"
           >
             ‹ Prev
           </button>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1 sm:gap-1.5 overflow-x-auto max-w-[180px] sm:max-w-none">
             {Array.from({ length: totalPages }).map((_, i) => {
               const pageNum = i + 1;
               return (
@@ -429,7 +430,7 @@ export default function KasirPage() {
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
                   className={cn(
-                    "w-7 h-7 flex items-center justify-center border-2 border-black font-black text-xs rounded-none transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer",
+                    "w-7 h-7 flex items-center justify-center border-2 border-black font-black text-xs rounded-none transition-all shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-pointer shrink-0",
                     currentPage === pageNum
                       ? "bg-[#22C55E] text-white"
                       : "bg-white text-black hover:bg-zinc-100"
@@ -443,7 +444,7 @@ export default function KasirPage() {
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="px-4 py-1.5 border-2 border-black bg-white text-black font-black uppercase text-[10px] rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-50 disabled:pointer-events-none transition-all cursor-pointer"
+            className="px-3 sm:px-4 py-1.5 border-2 border-black bg-white text-black font-black uppercase text-[10px] rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-zinc-100 active:translate-x-[1px] active:translate-y-[1px] active:shadow-none disabled:opacity-50 disabled:pointer-events-none transition-all cursor-pointer"
           >
             Next ›
           </button>
@@ -451,24 +452,64 @@ export default function KasirPage() {
 
       </div>
 
-      {/* Right: Cart Panel */}
-      <div className="w-full xl:w-[380px] flex flex-col border-[3px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none h-full overflow-hidden">
+      {/* Floating Action Cart Bar for Mobile */}
+      {cart.length > 0 && (
+        <div className="fixed bottom-16 left-3 right-3 z-30 xl:hidden">
+          <button
+            onClick={() => setMobileCartOpen(true)}
+            className="w-full flex items-center justify-between p-3.5 border-[3px] border-black bg-[#22C55E] text-white font-black uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px]"
+          >
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 stroke-[2.5px]" />
+              <span>KERANJANG ({cart.length} ITEM)</span>
+            </div>
+            <span className="text-sm font-mono tracking-wider">{formatRupiah(total)} ›</span>
+          </button>
+        </div>
+      )}
+
+      {/* Backdrop overlay for Mobile Cart Drawer */}
+      {mobileCartOpen && (
+        <div
+          className="fixed inset-0 z-45 bg-black/60 xl:hidden"
+          onClick={() => setMobileCartOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Right: Cart Panel (Fixed Desktop, Slide-up Bottom Drawer on Mobile) */}
+      <div
+        className={cn(
+          "w-full xl:w-[380px] flex flex-col border-[3px] border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none h-[85vh] xl:h-full overflow-hidden transition-all duration-200",
+          "fixed inset-x-0 bottom-0 z-50 rounded-t-xl xl:static xl:z-auto xl:rounded-none",
+          mobileCartOpen ? "translate-y-0" : "translate-y-full xl:translate-y-0"
+        )}
+      >
         
         {/* Cart Header */}
-        <div className="p-4 border-b-[3px] border-black flex items-center justify-between bg-white shrink-0">
-          <h2 className="font-black text-sm uppercase tracking-wider flex items-center gap-2">
+        <div className="p-3.5 sm:p-4 border-b-[3px] border-black flex items-center justify-between bg-white shrink-0">
+          <h2 className="font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
             <ShoppingCart className="h-4.5 w-4.5 text-black stroke-[2.5px]" />
             KERANJANG ({cart.length})
           </h2>
-          {cart.length > 0 && (
+          <div className="flex items-center gap-2">
+            {cart.length > 0 && (
+              <button
+                onClick={() => setCart([])}
+                className="flex items-center gap-1 px-2.5 py-1.5 border-2 border-black bg-[#EF4444] text-white font-black uppercase text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+              >
+                <Trash2 className="h-3 w-3" />
+                Kosongkan
+              </button>
+            )}
             <button
-              onClick={() => setCart([])}
-              className="flex items-center gap-1 px-2.5 py-1.5 border-2 border-black bg-[#EF4444] text-white font-black uppercase text-[9px] rounded-none shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] hover:bg-red-600 active:translate-y-[1px] active:shadow-none transition-all cursor-pointer"
+              onClick={() => setMobileCartOpen(false)}
+              className="xl:hidden p-1 border-2 border-black bg-zinc-100 hover:bg-zinc-200 text-black"
+              aria-label="Tutup keranjang"
             >
-              <Trash2 className="h-3 w-3" />
-              Kosongkan
+              <X className="h-4 w-4 stroke-[2.5px]" />
             </button>
-          )}
+          </div>
         </div>
 
         {/* Cart Items */}

@@ -319,7 +319,7 @@ export default function StockPage() {
           <h2 className="font-black text-sm uppercase tracking-wider text-black">RIWAYAT MUTASI STOK</h2>
         </div>
 
-        {/* Table Content */}
+        {/* Table Content (Card List on Mobile, Table on Desktop) */}
         <div className="p-0 overflow-x-auto">
           {loading ? (
             <div className="p-6 space-y-4">
@@ -334,28 +334,58 @@ export default function StockPage() {
               <p className="text-[10px] text-zinc-400 mt-1">Klik "+ Catat Stok" untuk menginput mutasi barang</p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b-[3px] border-black bg-zinc-50">
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Nama Produk</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Tipe</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Jumlah</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Catatan</th>
-                  <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black text-right">Tanggal & Waktu</th>
-                </tr>
-              </thead>
-              <tbody>
+            <>
+              {/* Mobile Card List (md:hidden) */}
+              <div className="grid grid-cols-1 gap-3 p-3 md:hidden">
                 {stockLogs.map((log) => (
-                  <tr key={log.id} className="border-b-2 border-black/10 hover:bg-zinc-50/50">
-                    <td className="p-3 text-xs font-bold uppercase text-black border-r border-black/10">{log.product.name}</td>
-                    <td className="p-3 text-xs border-r border-black/10">{typeBadge(log.type)}</td>
-                    <td className="p-3 text-xs font-mono font-black text-right text-black border-r border-black/10">{log.quantity} {log.product.unit}</td>
-                    <td className="p-3 text-xs font-medium text-zinc-600 border-r border-black/10">{log.note || "-"}</td>
-                    <td className="p-3 text-xs font-mono font-bold text-right text-zinc-500">{formatDateTime(log.createdAt)}</td>
-                  </tr>
+                  <div
+                    key={log.id}
+                    className="border-2 border-black bg-white p-3.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex flex-col gap-2"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-black text-xs uppercase text-black flex-1">{log.product.name}</p>
+                      {typeBadge(log.type)}
+                    </div>
+                    <div className="flex items-center justify-between text-xs font-mono border-t border-dashed border-black/20 pt-2 mt-1">
+                      <span className="text-[10px] text-zinc-500 font-sans uppercase font-bold">Mutasi Jumlah</span>
+                      <span className="font-black text-black">{log.quantity} {log.product.unit}</span>
+                    </div>
+                    {log.note && (
+                      <p className="text-[10px] text-zinc-600 bg-zinc-50 p-1.5 border border-black/10 font-medium italic">
+                        "{log.note}"
+                      </p>
+                    )}
+                    <p className="text-[9px] font-mono font-bold text-zinc-400 text-right mt-1">
+                      {formatDateTime(log.createdAt)}
+                    </p>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+
+              {/* Desktop Table View */}
+              <table className="hidden md:table w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b-[3px] border-black bg-zinc-50">
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Nama Produk</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Tipe</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10 text-right">Jumlah</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black border-r border-black/10">Catatan</th>
+                    <th className="p-3.5 text-xs font-black uppercase tracking-wider text-black text-right">Tanggal & Waktu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stockLogs.map((log) => (
+                    <tr key={log.id} className="border-b-2 border-black/10 hover:bg-zinc-50/50">
+                      <td className="p-3 text-xs font-bold uppercase text-black border-r border-black/10">{log.product.name}</td>
+                      <td className="p-3 text-xs border-r border-black/10">{typeBadge(log.type)}</td>
+                      <td className="p-3 text-xs font-mono font-black text-right text-black border-r border-black/10">{log.quantity} {log.product.unit}</td>
+                      <td className="p-3 text-xs font-medium text-zinc-600 border-r border-black/10">{log.note || "-"}</td>
+                      <td className="p-3 text-xs font-mono font-bold text-right text-zinc-500">{formatDateTime(log.createdAt)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
           )}
         </div>
       </div>
