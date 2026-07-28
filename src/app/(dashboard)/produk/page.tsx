@@ -427,7 +427,7 @@ export default function ProductsPage() {
                     name="categoryId"
                     control={form.control}
                     render={({ field }) => (
-                      <Select value={field.value || undefined} onValueChange={field.onChange}>
+                      <Select value={field.value || ""} onValueChange={field.onChange}>
                         <SelectTrigger className="w-full h-auto p-2.5 border-2 border-black bg-white text-black font-bold focus:outline-none focus:ring-0 focus:bg-zinc-50 rounded-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-xs">
                           <SelectValue placeholder="Pilih kategori..." />
                         </SelectTrigger>

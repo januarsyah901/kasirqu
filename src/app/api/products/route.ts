@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       categoryId,
       unit: saleUnit,
       baseUnit,
-      unitsPerSale,
+      unitsPerSale = 1,
       buyPrice, // per saleUnit
       sellPrice, // per saleUnit
       stock, // in saleUnit
@@ -66,18 +66,21 @@ export async function POST(request: Request) {
       imageUrl,
     } = validated;
 
+    const actualBaseUnit = baseUnit || saleUnit;
+    const actualUnitsPerSale = Number(unitsPerSale) || 1;
+
     // Convert to base unit (the unit we store for stock/price)
-    const stockBase = Number(stock) * Number(unitsPerSale);
-    const buyPriceBase = Number(buyPrice) / Number(unitsPerSale); // per baseUnit
-    const sellPriceBase = Number(sellPrice) / Number(unitsPerSale); // per baseUnit
+    const stockBase = Number(stock) * actualUnitsPerSale;
+    const buyPriceBase = Number(buyPrice) / actualUnitsPerSale; // per baseUnit
+    const sellPriceBase = Number(sellPrice) / actualUnitsPerSale; // per baseUnit
 
     const product = await db.product.create({
       data: {
         name,
         categoryId,
         unit: saleUnit, // keep sale unit for display
-        baseUnit,
-        unitsPerSale: Number(unitsPerSale),
+        baseUnit: actualBaseUnit,
+        unitsPerSale: actualUnitsPerSale,
         buyPrice: buyPriceBase,
         sellPrice: sellPriceBase,
         stock: stockBase,
