@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
-RUN npm ci
+RUN npm install --prefer-offline --no-audit --no-fund
 
 # Stage 2: Build
 FROM node:20-alpine AS builder
